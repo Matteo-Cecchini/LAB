@@ -15,8 +15,7 @@ plt.title("presa dati n°1")
 plt.show()
 
 array = [ds1000z.split_and_mean(i, "ch1_volt", "time") for i in data]
-
-periods = np.concatenate([ds1000z.time_deltas(i) for i in array], axis=1)
+for i in array], axis=1)
 
 print(np.mean(periods[0]))
 
