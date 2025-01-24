@@ -5,7 +5,22 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import soundfile as sf
+from time import time
+from numba import njit
+import multiprocessing
 
+@njit
+def DIY_ifft(indexes, nonzeros, coefficients, tot):
+    """
+    Funzione ottimizzata per ricostruire il segnale usando la formula dell'IFFT.
+    """
+    result = np.zeros(len(indexes), dtype=np.float64)
+    for i in range(len(indexes)):
+        # Calcolo dell'esponenziale per ogni elemento
+        args = 2j * np.pi * indexes[i] * nonzeros / tot
+        exps = np.exp(args) * coefficients
+        result[i] = np.sum(exps).real / tot  # Solo la parte reale
+    return result
 
 class Spectrum:
     audio = np.array([])
@@ -33,7 +48,7 @@ class Spectrum:
         ind, props = find_peaks(np.absolute(self.coefficients[:len(self.frequencies)])**2, height=mn + std)
         self.peaks = np.array([self.frequencies[ind].copy(), props["peak_heights"]])
         
-    def plot(self, save: str = None):     
+    def plot(self, save: str = None, title: str = None):     
         if self.coefficients.size == 0 or self.peaks.size == 0:
             self._find_peaks()
         
@@ -67,6 +82,8 @@ class Spectrum:
         #ax4.set_xscale('log')
         ax3.legend()
         ax4.legend()
+        if title != None:
+            plt.suptitle(title)
         
         if save != None:
             plt.savefig(save)
@@ -198,10 +215,66 @@ class Spectrum:
                 save = "syn_" + save
             plt.savefig(save)
         plt.show()
+    
+    def DIY_synthesis(self, n: int, file: str = None, dir: str = None):
+        if self.note.empty:
+            self.find_notes()
             
-    def DIY_synthesis(self):
-        pass
+        newcf = fft.fft(self.audio)
+        N = len(self.audio)
+        inds = np.arange(N)
+                
+        mask = np.isin(np.absolute(newcf)**2, self.peaks[1])
+        false_indices = np.where(mask)[0]
+        for idx in false_indices:
+            start = max(0, idx - n)
+            end = min(len(mask), idx + n + 1)
+            mask[start:end] = True
+
+        cofs = newcf[mask].copy()
+        suminds = inds[mask].copy()
         
+        yys = np.zeros(N, dtype=complex)
+        yys[mask] = cofs
+        yys = irfft(yys)
+        print("start")
+        nums = []
+        chunk_size = N // 4 # 4 core
+        chunks = []
+        for i in range(4):
+            start = i * chunk_size
+            end = (i + 1) * chunk_size if i < 4 - 1 else len(inds)
+            chunks.append((inds[start:end], suminds, cofs, N))
+        print("chunks")
+            
+        with multiprocessing.Pool(processes=4) as pool:
+            nums = pool.starmap(DIY_ifft, chunks)
+        nums = np.concatenate(nums)
+        #nums = DIY_ifft(inds, suminds, cofs, N)
+        print("done")
+        fig = plt.figure()
+        gs = fig.add_gridspec(2,1, hspace=0)
+        ax1, ax2 = gs.subplots(sharex=True, sharey=True)
+        
+        ax1.plot(self.audio, alpha=.3, label="audio originale")
+        ax1.plot(nums, alpha=.6, label="sintesi seni/coseni")
+        ax1.legend(loc="upper right")
+        
+        ax2.plot(self.audio, alpha=.3, label="audio originale")
+        ax2.plot(nums, alpha=.6, label="sintesi ifft")
+        ax2.legend(loc="upper right")
+
+        fig.suptitle("Sintesi seni/coseni (sopra) e ifft (sotto)", size=15)
+        fig.supxlabel("N° campione", size=15)
+        fig.supylabel("Ampiezza", size=15)
+
+        if dir != None:  
+            if file != None:
+                path = dir + "/diy_" + file
+                plt.savefig(path)
+        plt.show()
+        
+    
     def song_syn(self, n: int, file: str = None, wavdir: str = None, pngdir: str = None):
         if self.note.empty:
             self.find_notes()

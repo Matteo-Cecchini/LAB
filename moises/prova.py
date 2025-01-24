@@ -1,42 +1,25 @@
 import time
 import numpy as np
-from scipy.fft import rfft
+from scipy.fft import rfft, fft
 import matplotlib.pyplot as plt
 
-def uno(cs, n):
-    leff = len(cs)
-    cost = np.pi / leff     # non 2pi perchè uso rfft, che calcola nel dominio [0;pi]
-    ns = np.arange(0, leff)
-    nn = np.arange(0, n)
-    
-    recos = np.array([np.sum(cs.real*np.cos(cost*ns*i)) for i in nn])
-    resin = np.array([np.sum(cs.real*np.sin(cost*ns*i)) for i in nn])
-    imcos = np.array([np.sum(cs.imag*np.cos(cost*ns*i)) for i in nn])
-    imsin = np.array([np.sum(cs.imag*np.sin(cost*ns*i)) for i in nn])
-    
-    re = recos - imsin
-    im = imcos + resin
-    
-    xs = ( re + 1j*im ) / leff
-    return xs
+a = np.sin(np.linspace(0,10,100, endpoint=False))
 
-def due(cs):
-    n = len(cs)
-    arg = ( np.arange(n) * np.pi ) / n
-    ind = np.arange(n)
-    
-
-
-
-a = np.linspace(0,100,1000, endpoint=False)
-a = np.sin(a)
 b = rfft(a)
+d = fft(a).real
 
-t = time.time()
-c = uno(b, len(b)*2)
-t1 = time.time() - t
+l = len(a)
+j = l//2 + 1
+c = np.zeros(l)
+c[:j] = b
+if l%2 == 0:
+    c[j:] = np.conj(b[1:-1][::-1])
+else:
+    c[j:] = np.conj(b[1:][::-1])
+print(a)
+print(b)
+print(len(a), len(b))
+print(len(c))
 
-print(t1)
-plt.plot(a)
-plt.plot(c)
-plt.show()
+for i,j,k in zip(c,d, range(l)):
+    print(i==j, k)
