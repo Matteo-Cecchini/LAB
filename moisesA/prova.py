@@ -1,7 +1,7 @@
 import SpectrumA as Sp
 
-file = 2
+file = 3
 a = Sp.Spectrum(f"data{file}.txt")
 
-a.plot(f"data{file}", c="tomato", zoom=1)
-a.DIY_synthesis(0, f"data{file}", c="tomato", zoom=1)
+a.plot(f"data{file}", c="limegreen", zoom=1)
+a.DIY_synthesis(0, f"data{file}", c="limegreen", zoom=1)

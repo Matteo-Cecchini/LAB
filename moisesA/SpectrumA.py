@@ -104,14 +104,14 @@ class Spectrum:
             f0 = self.frequencies[mk]
             ff = np.linspace(19.8, self.peaks[0][-2]+10, 100, endpoint=False)
             aa = mx * (f0 / ff)**2
-            ax2.plot(ff, aa, ':', color="gray", alpha=.3, label="curva armoniche")
+            ax2.plot(ff, aa, ':', color="gray", alpha=.3, label="curva $\propto 1 \ n^2$")
         elif name == "data3":
             mx = np.max(self.peaks[1])
             mk = np.where(np.absolute(self.coefficients[:len(self.frequencies)])**2 == mx)[0]
             f0 = self.frequencies[mk]
             ff = np.linspace(self.peaks[0][1]-10, self.peaks[0][-1]+10, 100, endpoint=False)
             aa = mx * (f0 / ff)**4
-            ax2.plot(ff, aa, ':', color="gray", alpha=.3, label="curva armoniche")
+            ax2.plot(ff, aa, ':', color="gray", alpha=.3, label="curva $\propto 1 \ n^4$")
         ax2.set_xlabel("Frequenza in Hz", size=15)
         ax2.set_ylabel("Potenza dei coefficienti di Fourier", size=15)
         ax2.set_xlim(self.peaks[0][0] - 100, self.peaks[0][-1] + 100)
