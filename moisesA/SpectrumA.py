@@ -94,9 +94,24 @@ class Spectrum:
         f1.supxlabel("Tempo in secondi", size=15)
         f1.supylabel("Ampiezza in unità arbitrarie", size=15)
         
+        
         ax2 = g21.subplots()
         ax2.plot(self.frequencies, np.absolute(self.coefficients[:len(self.frequencies)])**2, c=c)
         ax2.plot(self.peaks[0], self.peaks[1], 's', color="darkturquoise", alpha=.5, label="picchi oltre una deviazione")
+        if name == "data2":
+            mx = np.max(self.peaks[1])
+            mk = np.where(np.absolute(self.coefficients[:len(self.frequencies)])**2 == mx)[0]
+            f0 = self.frequencies[mk]
+            ff = np.linspace(19.8, self.peaks[0][-2]+10, 100, endpoint=False)
+            aa = mx * (f0 / ff)**2
+            ax2.plot(ff, aa, ':', color="gray", alpha=.3, label="curva armoniche")
+        elif name == "data3":
+            mx = np.max(self.peaks[1])
+            mk = np.where(np.absolute(self.coefficients[:len(self.frequencies)])**2 == mx)[0]
+            f0 = self.frequencies[mk]
+            ff = np.linspace(self.peaks[0][1]-10, self.peaks[0][-1]+10, 100, endpoint=False)
+            aa = mx * (f0 / ff)**4
+            ax2.plot(ff, aa, ':', color="gray", alpha=.3, label="curva armoniche")
         ax2.set_xlabel("Frequenza in Hz", size=15)
         ax2.set_ylabel("Potenza dei coefficienti di Fourier", size=15)
         ax2.set_xlim(self.peaks[0][0] - 100, self.peaks[0][-1] + 100)
